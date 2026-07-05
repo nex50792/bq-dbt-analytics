@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd evidence-app && npm ci && npm run sources && npm run build",
+  "outputDirectory": "evidence-app/build",
+  "installCommand": "cd evidence-app && npm ci",
+  "framework": null
+}

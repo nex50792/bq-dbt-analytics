@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: stg_users
+    description: users を型変換 + column rename した staging model
+    columns:
+      - name: user_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: stg_products
+    description: products を型変換 + column rename した staging model
+    columns:
+      - name: product_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: stg_orders
+    description: orders を型変換 + timestamp化した staging model
+    columns:
+      - name: order_id
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_users')
+              field: user_id
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['Complete', 'Shipped', 'Processing', 'Cancelled', 'Returned']
+
+  - name: stg_order_items
+    description: order_items を型変換 + timestamp化した staging model
+    columns:
+      - name: order_item_id
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_orders')
+              field: order_id
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: product_id

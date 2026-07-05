@@ -1,0 +1,39 @@
+unit_tests:
+  - name: test_gross_profit_calculation
+    description: |
+      売価と原価から粗利と粗利率が正しく計算されることを検証する。
+      120円で売った売価100円原価の商品は粗利20円・粗利率16.67% (2/12) となる。
+    model: int_order_items_enriched
+    given:
+      - input: ref('stg_order_items')
+        rows:
+          - {order_item_id: 1, order_id: 10, user_id: 100, product_id: 1000, status: "Complete", sale_price: 120, ordered_at: "2026-06-15 10:00:00"}
+          - {order_item_id: 2, order_id: 20, user_id: 200, product_id: 2000, status: "Complete", sale_price: 500, ordered_at: "2026-06-16 11:00:00"}
+      - input: ref('stg_products')
+        rows:
+          - {product_id: 1000, cost: 100, category: "Food", brand: "b1", department: "d1"}
+          - {product_id: 2000, cost: 300, category: "Entertainment", brand: "b2", department: "d2"}
+      - input: ref('stg_orders')
+        rows:
+          - {order_id: 10, status: "Complete", ordered_at: "2026-06-15 10:00:00"}
+          - {order_id: 20, status: "Complete", ordered_at: "2026-06-16 11:00:00"}
+    expect:
+      rows:
+        - {order_item_id: 1, order_id: 10, user_id: 100, product_id: 1000, status: "Complete", sale_price: 120, product_cost: 100, product_category: "Food", product_brand: "b1", product_department: "d1", gross_profit: 20, gross_margin: 0.16666666666666666, ordered_at: "2026-06-15 10:00:00", order_status: "Complete", order_date: "2026-06-15"}
+        - {order_item_id: 2, order_id: 20, user_id: 200, product_id: 2000, status: "Complete", sale_price: 500, product_cost: 300, product_category: "Entertainment", product_brand: "b2", product_department: "d2", gross_profit: 200, gross_margin: 0.4, ordered_at: "2026-06-16 11:00:00", order_status: "Complete", order_date: "2026-06-16"}
+
+  - name: test_first_order_is_minimum
+    description: |
+      同一ユーザーに複数注文がある場合、first_ordered_at が最も古い注文であることを検証する。
+    model: int_user_first_order
+    given:
+      - input: ref('stg_orders')
+        rows:
+          - {order_id: 1, user_id: 100, ordered_at: "2026-06-15 10:00:00"}
+          - {order_id: 2, user_id: 100, ordered_at: "2026-06-01 09:00:00"}
+          - {order_id: 3, user_id: 100, ordered_at: "2026-07-01 09:00:00"}
+          - {order_id: 4, user_id: 200, ordered_at: "2026-06-20 10:00:00"}
+    expect:
+      rows:
+        - {user_id: 100, first_ordered_at: "2026-06-01 09:00:00", first_order_date: "2026-06-01"}
+        - {user_id: 200, first_ordered_at: "2026-06-20 10:00:00", first_order_date: "2026-06-20"}

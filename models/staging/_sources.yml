@@ -1,0 +1,58 @@
+version: 2
+
+sources:
+  - name: thelook
+    description: |
+      Google BigQuery public dataset で提供される合成 EC データ(TheLook)。
+      Olist 相当のスキーマだが、Google が生成した本物の統計分布を持つ大規模データ。
+    database: bigquery-public-data
+    schema: thelook_ecommerce
+    tables:
+      - name: users
+        description: 会員マスタ
+        columns:
+          - name: id
+            description: user primary key
+            data_tests:
+              - unique
+              - not_null
+      - name: products
+        description: 商品マスタ
+        columns:
+          - name: id
+            description: product primary key
+            data_tests:
+              - unique
+              - not_null
+      - name: orders
+        description: 注文ヘッダ(1注文=1レコード)
+        columns:
+          - name: order_id
+            data_tests:
+              - unique
+              - not_null
+          - name: user_id
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('thelook', 'users')
+                  field: id
+      - name: order_items
+        description: 注文明細(1注文商品=1レコード)
+        columns:
+          - name: id
+            data_tests:
+              - unique
+              - not_null
+          - name: order_id
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('thelook', 'orders')
+                  field: order_id
+          - name: product_id
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('thelook', 'products')
+                  field: id

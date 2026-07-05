@@ -1,0 +1,88 @@
+version: 2
+
+models:
+  - name: dim_users
+    description: |
+      ユーザーディメンション(user_id 単位、initial signup + first order 属性含む)。
+      パーティション: signed_up_date、クラスタ: country。
+    columns:
+      - name: user_id
+        data_tests:
+          - unique
+          - not_null
+      - name: has_ordered
+        data_tests:
+          - not_null
+
+  - name: dim_products
+    description: |
+      商品ディメンション(product_id 単位、margin_rate 前計算)。
+    columns:
+      - name: product_id
+        data_tests:
+          - unique
+          - not_null
+      - name: cost
+        data_tests:
+          - non_negative_value
+      - name: retail_price
+        data_tests:
+          - non_negative_value
+
+  - name: fct_order_items
+    description: |
+      注文明細ファクト(order_item 単位、incremental で日次追加、
+      product_category クラスタ)。
+    columns:
+      - name: order_item_id
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_users')
+              field: user_id
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: product_id
+      - name: sale_price
+        data_tests:
+          - not_null
+          - non_negative_value
+      - name: product_cost
+        data_tests:
+          - non_negative_value
+
+  - name: mart_daily_revenue
+    description: |
+      日次×カテゴリ集計マート(Cancelled/Returned を除外、粗利率算出)。
+    columns:
+      - name: order_date
+        data_tests:
+          - not_null
+      - name: revenue
+        data_tests:
+          - not_null
+          - non_negative_value
+      - name: items_sold
+        data_tests:
+          - non_negative_value
+      - name: orders
+        data_tests:
+          - non_negative_value
+
+  - name: mart_user_cohort_retention
+    description: |
+      初回購入月×経過月のリテンション率(有名な cohort matrix)。
+    columns:
+      - name: cohort_month
+        data_tests:
+          - not_null
+      - name: retention_rate
+        data_tests:
+          - not_null

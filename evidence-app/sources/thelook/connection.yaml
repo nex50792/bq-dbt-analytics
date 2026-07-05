@@ -1,0 +1,4 @@
+name: thelook
+type: duckdb
+options:
+  filename: ':memory:'
